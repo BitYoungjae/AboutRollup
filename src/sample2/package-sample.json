@@ -1,27 +1,4 @@
 {
   "name": "1",
-  "version": "1.0.0",
-  "description": "롤업 연습",
-  "main": "./dist/index.cjs",
-  "scripts": {
-    "build": "rollup -c"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/BitYoungjae/rollup-practice-1.git"
-  },
-  "keywords": [],
-  "author": {
-    "name": "BitYoungjae",
-    "email": "bityoungjae@gmail.com"
-  },
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/BitYoungjae/rollup-practice-1/issues"
-  },
-  "homepage": "https://github.com/BitYoungjae/rollup-practice-1#readme",
-  "devDependencies": {
-    "@rollup/plugin-json": "^4.0.2",
-    "rollup": "^2.6.1"
-  }
+  "version": "1.0.0"
 }
