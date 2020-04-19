@@ -92,6 +92,136 @@ const filterFunc = (src, dest) => {
 
 함수의 호출 결과가 true 일 때만 복사를 수행하고 false일 경우 무시합니다.
 
+## htmlInjector
+
+특정 템플릿 파일로부터 html 페이지를 생성하여 저장할 수 있습니다.
+
+내부적으로 [string-template - npm](https://www.npmjs.com/package/string-template) 모듈을 사용합니다.
+
+- 템플릿 파일에는 `{age}` 와 같은 형태로 `placeholder` 를 지정합니다.
+- 빌드시 htmlInjector 플러그인은 옵션 객체를 인자로 받습니다.
+- 옵션 객체의 `template` 속성으로 템플릿 파일의 경로를 지정합니다.
+- 옵션 객체의 `target` 속성으로 생성된 html이 위치할 경로를 지정합니다.
+- 옵션 객체의 `injects` 속성에 `placeholder` 와 `동명의 키`와 `치환할 값`으로 이루어진 객체를 지정합니다.
+
+### htmlInjector 예시
+
+아래와 같이 템플릿 html을 준비합니다.
+
+```html
+<!-- ./public/template.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{title}{modeDescription}</title>
+  </head>
+  <body>
+    {bodyContent}
+  </body>
+</html>
+```
+
+아래와 같이 롤업 설정 파일을 준비합니다.
+
+```js
+// rollup.config.js
+const isDevMode = true;
+
+export default {
+  // ...
+  plugins: [
+    htmlInjector({
+      template: './public/template.html',
+      target: './dist/index.html',
+      injects: {
+        title: '영재가 만든 웹페이지',
+        modeDescription: isDevMode ? '(개발용)' : null,
+        bodyContent: '본문 내용이에요 하하',
+      },
+    }),
+  ];
+}
+```
+
+출력된 html은 다음과 같습니다.
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>영재가 만든 웹페이지(개발용)</title>
+  </head>
+
+  <body>
+    본문 내용이에요 하하
+  </body>
+</html>
+```
+
+## 복합 예시
+
+`rollup-plugin-app-utils` 가 제공하는 유틸리티 플러그인들을 조합하면 아래와 같은 일을 할 수 있다.
+
+```js
+import { terser } from 'rollup-plugin-terser';
+import banner from 'rollup-plugin-banner';
+import {
+  emptyDirectories,
+  copyAssets,
+  htmlInjector,
+} from 'rollup-plugin-app-utils';
+
+const copyExcludes = ['index.html', 'template.html'];
+const isDevMode = true;
+
+/** @type {import('rollup').RollupOptions} */
+const option = {
+  input: './src/sample3/index.js',
+  output: [
+    {
+      dir: './dist/min',
+      format: 'esm',
+      plugins: [terser()],
+    },
+    {
+      entryFileNames: 'index.mjs',
+      chunkFileNames: '[name][hash].[format].mjs',
+      dir: './dist/normal',
+      format: 'esm',
+    },
+  ],
+  plugins: [
+    banner(`최종 빌드 시각 : ${new Date().toLocaleString()}`),
+    emptyDirectories(['./dist']), // ./dist 폴더를 초기화한다.
+    copyAssets(
+      // Asset들을 복사한다
+      {
+        './public': './dist', // ./public에서 ./dist로
+      },
+      (src, des) => {
+        // 파일명이 copyExcludes에 포함되어 있을 경우 복사하지 않는다.
+        const name = src.split('/').slice(-1)[0];
+        if (copyExcludes.includes(name)) return false;
+
+        return true;
+      },
+    ),
+    htmlInjector({
+      // template.html 파일을 이용해 index.html 을 생성하여 ./dist 경로에 저장한다.
+      template: './public/template.html',
+      target: './dist/index.html',
+      injects: {
+        title: '영재가 만든 웹페이지',
+        modeDescription: isDevMode ? '(개발용)' : null,
+        bodyContent: '본문 내용이에요 하하',
+      },
+    }),
+  ],
+};
+
+export default option;
+```
+
 ## 공식 저장소
 
 [Autodesk/rollup-plugin-app-utils: Provides common rollup build utils for i18n, prepare & clean directories, copy assets & html injects](https://github.com/Autodesk/rollup-plugin-app-utils)
